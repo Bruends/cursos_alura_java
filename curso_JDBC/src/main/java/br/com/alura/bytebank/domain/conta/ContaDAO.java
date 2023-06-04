@@ -62,7 +62,7 @@ public class ContaDAO {
 
                 DadosCadastroCliente dados = new DadosCadastroCliente(nome, cpf, email);
                 Cliente cliente = new Cliente(dados);
-                Conta conta = new Conta(numeroConta, cliente);
+                Conta conta = new Conta(numeroConta, cliente, saldo);
 
                 contas.add(conta);
             }
@@ -77,4 +77,37 @@ public class ContaDAO {
         return contas;
     }
 
+    public void alterar(Integer numero, BigDecimal valor) {
+        PreparedStatement ps;
+        String sql = "UPDATE conta SET saldo = ? WHERE numero = ?";
+
+        try {
+            ps = con.prepareStatement(sql);
+            ps.setBigDecimal(1, valor);
+            ps.setInt(2, numero);
+
+            ps.execute();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    public void deletar(int numero)
+    {
+        PreparedStatement ps;
+        String sql = "DELETE FROM conta WHERE numero = ?";
+
+        try {
+            ps = con.prepareStatement(sql);
+            ps.setInt(1, numero);
+            ps.execute();
+            ps.close();
+            con.close();
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex);
+        }
+
+    }
 }

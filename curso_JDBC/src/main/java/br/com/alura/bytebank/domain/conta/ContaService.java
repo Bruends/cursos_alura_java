@@ -15,12 +15,12 @@ public class ContaService {
 
     private ConnectionFactory connectionFactory;
 
+    private Set<Conta> contas = new HashSet<>();
+
     public ContaService()
     {
         this.connectionFactory = new ConnectionFactory();
     }
-
-    private Set<Conta> contas = new HashSet<>();
 
     public Set<Conta> listarContasAbertas() {
         Connection con = connectionFactory.getConnection();
@@ -35,11 +35,9 @@ public class ContaService {
     public void abrir(DadosAberturaConta dadosDaConta) {
         ConnectionFactory conFactory = new ConnectionFactory();
         Connection con = conFactory.getConnection();
-
         ContaDAO contaDAO = new ContaDAO(con);
 
         contaDAO.save(dadosDaConta);
-
     }
 
     public void realizarSaque(Integer numeroDaConta, BigDecimal valor) {
@@ -52,7 +50,8 @@ public class ContaService {
             throw new RegraDeNegocioException("Saldo insuficiente!");
         }
 
-        conta.sacar(valor);
+        Connection con = connectionFactory.getConnection();
+        new ContaDAO(con).alterar(conta.getNumero(), conta.getSaldo().subtract(valor));
     }
 
     public void realizarDeposito(Integer numeroDaConta, BigDecimal valor) {
@@ -61,7 +60,8 @@ public class ContaService {
             throw new RegraDeNegocioException("Valor do deposito deve ser superior a zero!");
         }
 
-        conta.depositar(valor);
+        Connection con = connectionFactory.getConnection();
+        new ContaDAO(con).alterar(conta.getNumero(), valor.add(conta.getSaldo()));
     }
 
     public void encerrar(Integer numeroDaConta) {
@@ -70,10 +70,12 @@ public class ContaService {
             throw new RegraDeNegocioException("Conta não pode ser encerrada pois ainda possui saldo!");
         }
 
-        contas.remove(conta);
+        Connection con = connectionFactory.getConnection();
+        new ContaDAO(con).deletar(numeroDaConta);
     }
 
     private Conta buscarContaPorNumero(Integer numero) {
+        this.contas = listarContasAbertas();
         return contas
                 .stream()
                 .filter(c -> c.getNumero() == numero)
